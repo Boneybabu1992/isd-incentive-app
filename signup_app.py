@@ -1,64 +1,57 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 import os
 
-# Title of the App
-st.title("ISD Signup Portal – Häfele")
+# Path to your Excel file (must match actual file in repo)
+excel_file = "isd_signup_data.xlsx"
 
-# Intro text
-st.markdown("Please fill in your details below to register for the Häfele ISD Incentive Program.")
+# Load existing data if file exists
+if os.path.exists(excel_file):
+    df = pd.read_excel(excel_file)
+else:
+    df = pd.DataFrame(columns=[
+        "Full Name", "Phone Number", "Residential Address", "Shop Name",
+        "Employee Category", "Employee ID", "Bank Name", "Account Number",
+        "IFSC Code", "UPI ID", "Password"
+    ])
 
-# Input fields
-full_name = st.text_input("Full Name")
-phone = st.text_input("Phone Number")
-address = st.text_area("Full Residential Address")
-shop_name = st.text_input("Shop Name")
-employee_category = st.selectbox("Employee Category", ["Select", "Häfele ISD", "Outlet Promoter"])
+st.title("ISD Registration - Incentive Portal")
 
-# Conditional field
-employee_id = ""
-if employee_category == "Häfele ISD":
-    employee_id = st.text_input("Employee ID")
+with st.form("signup_form"):
+    full_name = st.text_input("Full Name")
+    phone = st.text_input("Phone Number")
+    address = st.text_area("Residential Address")
+    shop = st.text_input("Shop Name")
+    category = st.selectbox("Employee Category", ["Hafele ISD", "Outlet Promoter"])
+    emp_id = ""
+    if category == "Hafele ISD":
+        emp_id = st.text_input("Employee ID")
+    bank = st.text_input("Bank Name")
+    acc_no = st.text_input("Bank Account Number")
+    ifsc = st.text_input("IFSC Code")
+    upi = st.text_input("UPI ID")
+    password = st.text_input("Create Password", type="password")
+    
+    submitted = st.form_submit_button("Submit")
 
-bank_name = st.text_input("Bank Name")
-account_number = st.text_input("Bank Account Number")
-ifsc_code = st.text_input("IFSC Code")
-upi_id = st.text_input("UPI ID")
-password = st.text_input("Create Password", type="password")
-
-# Submit button
-if st.button("Submit"):
-    if (
-        full_name and phone and address and shop_name and employee_category != "Select"
-        and bank_name and account_number and ifsc_code and upi_id and password
-    ):
-        # Create a new row with the data
-        new_data = {
-            "Full Name": full_name,
-            "Phone Number": phone,
-            "Residential Address": address,
-            "Shop Name": shop_name,
-            "Employee Category": employee_category,
-            "Employee ID": employee_id,
-            "Bank Name": bank_name,
-            "Account Number": account_number,
-            "IFSC Code": ifsc_code,
-            "UPI ID": upi_id,
-            "Password": password
-        }
-
-        file_path = "isd_signup_data.xlsx"
-
-        # Load existing file or create new
-        if os.path.exists(file_path):
-            df = pd.read_excel(file_path)
-            df = df.append(new_data, ignore_index=True)
+    if submitted:
+        if not full_name or not phone or not address or not shop or not bank or not acc_no or not ifsc or not upi or not password:
+            st.warning("Please fill in all the required fields.")
         else:
-            df = pd.DataFrame([new_data])
-
-        # Save back to Excel
-        df.to_excel(file_path, index=False)
-
-        st.success("🎉 Registration Successful!")
-    else:
-        st.error("⚠️ Please fill all the required fields.")
+            new_entry = {
+                "Full Name": full_name,
+                "Phone Number": phone,
+                "Residential Address": address,
+                "Shop Name": shop,
+                "Employee Category": category,
+                "Employee ID": emp_id,
+                "Bank Name": bank,
+                "Account Number": acc_no,
+                "IFSC Code": ifsc,
+                "UPI ID": upi,
+                "Password": password
+            }
+            df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+            df.to_excel(excel_file, index=False)
+            st.success("Registration submitted successfully!")
